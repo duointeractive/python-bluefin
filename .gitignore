@@ -6,3 +6,4 @@ dist
 *.tmp
 *.swp
 tests/api_details.py
+*.egg-info
