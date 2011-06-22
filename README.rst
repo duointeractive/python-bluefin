@@ -27,7 +27,6 @@ of these values are documented in the Bluefin API documentation, so look there
 for help on just what is being passed in and coming back.
 
     >>> from bluefin.directmode.clients import V3Client
-
     >>> api = V3Client()
     >>> result = api.send_request({
         'pay_type': 'C',
