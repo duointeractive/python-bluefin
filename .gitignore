@@ -1,0 +1,8 @@
+*.pyc
+*~
+.idea
+build
+dist
+*.tmp
+*.swp
+tests/api_details.py
