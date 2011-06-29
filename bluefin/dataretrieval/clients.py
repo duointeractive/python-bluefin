@@ -6,7 +6,7 @@ import urllib
 import urllib2
 import urlparse
 
-from bluefin.dataretrieval.exceptions import V1ClientProcessingException
+from bluefin.dataretrieval.exceptions import V1ClientProcessingException, V1ClientInputException
 
 class V1Client(object):
     """
@@ -71,7 +71,9 @@ class V1Client(object):
         except urllib2.HTTPError, exc:
             error_code = exc.getcode()
 
-            if error_code == 454:
+            if error_code == 457:
+                raise V1ClientInputException(exc.msg, error_code=error_code)
+            elif error_code > 417 and error_code < 500:
                 raise V1ClientProcessingException(exc.msg, error_code=error_code)
             else:
                 raise

@@ -17,3 +17,10 @@ class TransactionReportingTest(unittest.TestCase):
             'account_id': API_DETAILS['account_id'],
             'authorization': 'qRdNQK0lkc7vwHP2h6mm',
         })
+
+    def test_no_input(self):
+
+        api = V1Client()
+        self.assertRaises(V1ClientInputException, api.send_request, {})
+
+
