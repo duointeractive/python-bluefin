@@ -12,11 +12,12 @@ class TransactionReportingTest(unittest.TestCase):
         Test a basic successful API call.
         """
         api = V1Client()
-        api.send_request({
+        result = api.send_request({
             'transactions_after': '2006-12-30',
             'account_id': API_DETAILS['account_id'],
-            'authorization': 'qRdNQK0lkc7vwHP2h6mm',
+            'authorization': 'LIGONIER_DOT_ORG',
         })
+        print result
 
     def test_no_input(self):
 
