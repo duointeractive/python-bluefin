@@ -7,12 +7,14 @@ class AuthorizeTests(unittest.TestCase):
     """
     Tests for authorization API calls.
     """
+    def setUp(self):
+        self.api = V3Client()
+
     def test_basic(self):
         """
         Test a basic successful API call.
         """
-        api = V3Client()
-        api.send_request({
+        self.api.send_request({
             'pay_type': 'C',
             'tran_type': 'A',
             'account_id': API_DETAILS['account_id'],
@@ -26,7 +28,6 @@ class AuthorizeTests(unittest.TestCase):
         """
         Use an invalid security code to test exception handling.
         """
-        api = V3Client()
         api_values = {
             'pay_type': 'C',
             'tran_type': 'A',
@@ -37,4 +38,66 @@ class AuthorizeTests(unittest.TestCase):
             'dynip_sec_code': 'HUZZAH_FOR_I_AM_INVALID',
         }
 
-        self.assertRaises(V3ClientInputException, api.send_request, api_values)
+        self.assertRaises(V3ClientInputException, self.api.send_request, api_values)
+
+
+    def test_missing_cc_num(self):
+        api_values = {
+            'pay_type': 'C',
+            'tran_type': 'A',
+            'account_id': API_DETAILS['account_id'],
+            'amount': 1.0,
+            #'card_number': TEST_CARD['card_number'],
+            'card_expire': TEST_CARD['card_expire'],
+            'dynip_sec_code': API_DETAILS['dynip_sec_code'],
+            }
+
+        self.assertRaises(V3ClientInputException, self.api.send_request,
+                          api_values)
+
+    def test_missing_cc_expiration(self):
+        api_values = {
+            'pay_type': 'C',
+            'tran_type': 'A',
+            'account_id': API_DETAILS['account_id'],
+            'amount': 1.0,
+            'card_number': TEST_CARD['card_number'],
+            #'card_expire': TEST_CARD['card_expire'],
+            'dynip_sec_code': API_DETAILS['dynip_sec_code'],
+            }
+
+        self.assertRaises(V3ClientInputException, self.api.send_request,
+                          api_values)
+
+    def test_missing_amount(self):
+        api_values = {
+            'pay_type': 'C',
+            'tran_type': 'A',
+            'account_id': API_DETAILS['account_id'],
+            #'amount': 1.0,
+            'card_number': TEST_CARD['card_number'],
+            'card_expire': TEST_CARD['card_expire'],
+            'dynip_sec_code': API_DETAILS['dynip_sec_code'],
+            }
+
+        self.assertRaises(V3ClientInputException, self.api.send_request,
+                          api_values)
+
+    def test_invalid_amount(self):
+        api_values = {
+            'pay_type': 'C',
+            'tran_type': 'A',
+            'account_id': API_DETAILS['account_id'],
+            'amount': -1.0,
+            'card_number': TEST_CARD['card_number'],
+            'card_expire': TEST_CARD['card_expire'],
+            'dynip_sec_code': API_DETAILS['dynip_sec_code'],
+            }
+
+        self.assertRaises(V3ClientInputException, self.api.send_request,
+                          api_values)
+
+        # Now set it to something non-numerical.
+        api_values['amount'] = 'a'
+        self.assertRaises(V3ClientInputException, self.api.send_request,
+                          api_values)
