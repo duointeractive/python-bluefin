@@ -101,3 +101,26 @@ class AuthorizeTests(unittest.TestCase):
         api_values['amount'] = 'a'
         self.assertRaises(V3ClientInputException, self.api.send_request,
                           api_values)
+
+class AuthorizeRecurringTests(unittest.TestCase):
+    """
+    Unit tests for recurring payment authorization.
+    """
+    def setUp(self):
+        self.api = V3Client()
+
+    def test_basic(self):
+        """
+        Test a basic successful API call.
+        """
+        self.api.send_request({
+            'pay_type': 'C',
+            'tran_type': 'A',
+            'account_id': API_DETAILS['account_id'],
+            'amount': 1.0,
+            'recurring_amount': 1.0,
+            'recurring_period': 31,
+            'card_number': TEST_CARD['card_number'],
+            'card_expire': TEST_CARD['card_expire'],
+            'dynip_sec_code': API_DETAILS['dynip_sec_code'],
+            })
