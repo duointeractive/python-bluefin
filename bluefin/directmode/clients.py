@@ -14,7 +14,8 @@ class V3Client(object):
     the V3.x Direct Mode API client.
     """
     def __init__(self, host='https://secure.bluefingateway.com:1402',
-                 path='/gw/sas/direct3.1', http_timeout=15):
+                 path='/gw/sas/direct3.1', http_timeout=15,
+                 account_id=None, dynip_sec_code=None):
         """
         Instantiates our API interface with sensible defaults.
 
@@ -23,6 +24,12 @@ class V3Client(object):
         :keyword str path: The path to the API endpoint.
         :keyword int http_timeout: Socket timeout in seconds. This is globally
             applied, so be careful.
+        :keyword int account_id: Your Bluefin account number. Providing this
+            value here means you don't have to pass it with each value dict
+            to :py:meth:`send_request`.
+        :keyword str dynip_sec_code: A dynamic IP security code. Providing this
+            value here means you don't have to pass it with each value dict
+            to :py:meth:`send_request`.
         """
         # Default to the HTTPS endpoint.
         self.host = host
@@ -30,6 +37,13 @@ class V3Client(object):
         self.path = path
         # Note that this is applied gobally, so be careful.
         self.http_timeout = http_timeout
+
+        self.default_values = {}
+
+        if account_id:
+            self.default_values['account_id'] = account_id
+        if dynip_sec_code:
+            self.default_values['dynip_sec_code'] = dynip_sec_code
 
     def _get_endpoint(self):
         """
@@ -56,7 +70,13 @@ class V3Client(object):
         # This is applied globally!
         socket.setdefaulttimeout(self.http_timeout)
 
-        data = urllib.urlencode(values)
+        # Copy the default values dict so we don't have to repeat stuff like
+        # account_id and dynip_sec_code for every request.
+        all_values = self.default_values.copy()
+        # The transaction values can override the defaults.
+        all_values.update(values)
+
+        data = urllib.urlencode(all_values)
 
         request = urllib2.Request(self._get_endpoint(), data)
         try:
