@@ -26,6 +26,7 @@ setup(
     packages=[
         'bluefin',
         'bluefin.directmode',
+        'bluefin.dataretrieval',
     ],
     author='Gregory Taylor',
     author_email='gtaylor@duointeractive.com',
