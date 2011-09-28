@@ -21,9 +21,8 @@ class SaleTests(unittest.TestCase):
             'amount': 1.0,
             'card_number': TEST_CARD['card_number'],
             'card_expire': TEST_CARD['card_expire'],
+            'disable_cvv2': 'true',
             'dynip_sec_code': API_DETAILS['dynip_sec_code'],
-            # Must be the customer's IP address.
-            'cust_ip': '127.0.0.1',
             'bill_name1': 'First',
             'bill_name2': 'Last',
             'bill_street': '123 Some Street',
@@ -53,9 +52,8 @@ class AuthorizeTests(unittest.TestCase):
             'amount': 1.0,
             'card_number': TEST_CARD['card_number'],
             'card_expire': TEST_CARD['card_expire'],
+            'disable_cvv2': 'true',
             'dynip_sec_code': API_DETAILS['dynip_sec_code'],
-            # Must be the customer's IP address.
-            'cust_ip': '127.0.0.1',
             'bill_name1': 'First',
             'bill_name2': 'Last',
             'bill_street': '123 Some Street',
