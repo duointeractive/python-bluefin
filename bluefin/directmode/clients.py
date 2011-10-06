@@ -76,7 +76,16 @@ class V3Client(object):
         # The transaction values can override the defaults.
         all_values.update(values)
 
-        data = urllib.urlencode(all_values)
+        cleaned_values = {}
+        for key, value in all_values.items():
+            if not value:
+                value = ''
+
+            if isinstance(value, basestring):
+                value = value.encode('utf-8')
+            cleaned_values[key] = value
+
+        data = urllib.urlencode(cleaned_values)
 
         request = urllib2.Request(self._get_endpoint(), data)
         try:

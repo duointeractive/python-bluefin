@@ -17,7 +17,6 @@ class TransactionReportingTest(unittest.TestCase):
             'account_id': API_DETAILS['account_id'],
             'authorization': 'LIGONIER_DOT_ORG',
         })
-        print result
 
     def test_no_input(self):
 
