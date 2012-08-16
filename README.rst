@@ -1,5 +1,5 @@
-python-bluefin
-==============
+python-bluefin 1.1
+==================
 
 python-bluefin is a Python API client for the Bluefin_ Payment System API.
 The only thing this client module does is serialize and pass the data on to
