@@ -1,0 +1,20 @@
+Changelog
+=========
+
+1.2
+---
+
+* Moved to the excellent requests library instead of urllib2.
+* Error handling raises exceptions for directmode status_codes that are
+  known to mark failed queries.
+
+1.1
+---
+
+* Adding dataretrieval module.
+* Additional unit tests.
+
+1.0
+---
+
+* Initial release.
