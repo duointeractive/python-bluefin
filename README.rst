@@ -16,7 +16,20 @@ dict format.
 Status
 ------
 
-python-bluefin is still pretty young, but usable. Pull requests are appreciated!
+python-bluefin has been in use in production for about a year with a high
+transaction volume. The directmode client in particular has seen lots of use.
+
+That said, we only use a little sliver of what Bluefin supports (one-off
+credit card charges, namely). Given that python-bluefin is a very light
+wrapper, other usage cases should still work just fine, even if we (the
+maintainers) haven't used them yet.
+
+Installing
+----------
+
+To install::
+
+    pip install --upgrade bluefin
 
 A quick example
 ---------------

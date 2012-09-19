@@ -5,8 +5,9 @@ import socket
 import urllib
 import urllib2
 import urlparse
+import requests
 
-from bluefin.dataretrieval.exceptions import V1ClientProcessingException, V1ClientInputException
+from bluefin.dataretrieval.exceptions import V1ClientProcessingException, V1ClientInputException, V1ClientException
 
 class V1Client(object):
     """
@@ -38,6 +39,26 @@ class V1Client(object):
         """
         return '%s%s' % (self.host, self.path)
 
+    def _check_for_error_http_status_code(self, response):
+        """
+        Checks the response's HTTP status code for common error code numbers.
+
+        :param requests.Response response: A requests Response object generated
+            by requests.post().
+        :raises: An appropriate bluefin.directmode.exceptions.V3ClientException
+            sub-class, depending on the error.
+        """
+        http_status = response.status_code
+
+        if http_status >= 457:
+            # HTTP error codes 600-699 are input errors.
+            raise V1ClientInputException(response.text, error_code=http_status)
+        elif http_status > 417 and http_status < 500:
+            # HTTP error codes 700-799 http_status processing errors.
+            raise V1ClientProcessingException(response.text, error_code=http_status)
+        elif http_status > 200:
+            raise V1ClientException(response.text, error_code=http_status)
+
     def send_request(self, values):
         """
         Sends an API request. You are on your own to pass in the correct
@@ -53,32 +74,24 @@ class V1Client(object):
             API encounters an error during processing. The lower level
             urllib2 may raise urllib2.HTTPError exceptions also.
         """
-        # This is applied globally!
-        socket.setdefaulttimeout(self.http_timeout)
-
-        data = urllib.urlencode(values)
 
         headers = {
-            'Content-Length': len(data),
             'Content-Type': 'application/x-www-form-urlencoded',
             'Host': 'secure.bluefingateway.com',
             'User-Agent': 'PythonBluefin/Version:2011.Jun.28',
         }
 
-        request = urllib2.Request(self._get_endpoint(), data, headers)
-        try:
-            result = urllib2.urlopen(request).read()
-        except urllib2.HTTPError, exc:
-            error_code = exc.getcode()
+        response = requests.post(
+            self._get_endpoint(),
+            data=values,
+            headers=headers,
+            timeout=self.http_timeout
+        )
+        # Looks at the HTTP status code and raises an exception if any of the
+        # known number ranges for errors are returned.
+        self._check_for_error_http_status_code(response)
 
-            if error_code == 457:
-                raise V1ClientInputException(exc.msg, error_code=error_code)
-            elif error_code > 417 and error_code < 500:
-                raise V1ClientProcessingException(exc.msg, error_code=error_code)
-            else:
-                raise
-
-        result_dict = urlparse.parse_qs(result)
+        result_dict = urlparse.parse_qs(response.text)
         for key, value in result_dict.items():
             # Strip away the lists from the value, since these should all just
             # be a one-member list. We'll join with commas just in case.

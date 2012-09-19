@@ -28,6 +28,7 @@ setup(
         'bluefin.directmode',
         'bluefin.dataretrieval',
     ],
+    install_requires=['requests'],
     author='Gregory Taylor',
     author_email='gtaylor@duointeractive.com',
     url='https://github.com/duointeractive/python-bluefin/',

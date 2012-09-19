@@ -15,7 +15,8 @@ class TransactionReportingTest(unittest.TestCase):
         result = api.send_request({
             'transactions_after': '2006-12-30',
             'account_id': API_DETAILS['account_id'],
-            'authorization': 'LIGONIER_DOT_ORG',
+            'site_tag': 'MAIN',
+            'authorization': API_DETAILS['site_tag_auth_code'],
         })
 
     def test_no_input(self):

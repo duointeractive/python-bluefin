@@ -1,12 +1,11 @@
 """
 Client classes for Direct Mode services.
 """
-import socket
-import urllib
-import urllib2
-import urlparse
 
-from bluefin.directmode.exceptions import V3ClientInputException, V3ClientProcessingException
+import urlparse
+import requests
+
+from bluefin.directmode.exceptions import V3ClientInputException, V3ClientProcessingException, V3ClientException
 
 class V3Client(object):
     """
@@ -52,6 +51,44 @@ class V3Client(object):
         """
         return '%s%s' % (self.host, self.path)
 
+    def _check_for_error_http_status_code(self, response):
+        """
+        Checks the response's HTTP status code for common error code numbers.
+
+        :param requests.Response response: A requests Response object generated
+            by requests.post().
+        :raises: An appropriate bluefin.directmode.exceptions.V3ClientException
+            sub-class, depending on the error.
+        """
+        http_status = response.status_code
+
+        if http_status >= 600 and http_status <= 699:
+            # HTTP error codes 600-699 are input errors.
+            raise V3ClientInputException(response.text, error_code=http_status)
+        elif http_status >= 700 and http_status <= 799:
+            # HTTP error codes 700-799 http_status processing errors.
+            raise V3ClientProcessingException(response.text, error_code=http_status)
+        elif http_status > 200:
+            raise V3ClientException(response.text, error_code=http_status)
+
+    def _check_parsed_response_for_error_codes(self, result_dict):
+        """
+        Looks through the dict that we get by parsing the response from Bluefin.
+        Finds any known error conditions, raises an appropriate exception.
+
+        :param dict result_dict: The urlparsed response from Bluefin.
+        :raises: An appropriate bluefin.directmode.exceptions.V3ClientException
+            sub-class, depending on the error.
+        """
+
+        status_code = result_dict.get('status_code')
+        # These are the two status codes that indicate issues.
+        if result_dict.get('status_code') in ['F', '0']:
+            # There are multiple error fields to check. auth_msg is almost always
+            # the one to go by.
+            err_message = result_dict.get('auth_msg') or result_dict.get('reason_code2')
+            raise V3ClientProcessingException(err_message, error_code=status_code)
+
     def send_request(self, values):
         """
         Sends an API request. You are on your own to pass in the correct
@@ -67,8 +104,6 @@ class V3Client(object):
             API encounters an error during processing. The lower level
             urllib2 may raise urllib2.HTTPError exceptions also.
         """
-        # This is applied globally!
-        socket.setdefaulttimeout(self.http_timeout)
 
         # Copy the default values dict so we don't have to repeat stuff like
         # account_id and dynip_sec_code for every request.
@@ -76,36 +111,23 @@ class V3Client(object):
         # The transaction values can override the defaults.
         all_values.update(values)
 
-        cleaned_values = {}
-        for key, value in all_values.items():
-            if not value:
-                value = ''
+        response = requests.post(
+            self._get_endpoint(),
+            data=all_values,
+            timeout=self.http_timeout
+        )
+        # Looks at the HTTP status code and raises an exception if any of the
+        # known number ranges for errors are returned.
+        self._check_for_error_http_status_code(response)
 
-            if isinstance(value, basestring):
-                value = value.encode('utf-8')
-            cleaned_values[key] = value
-
-        data = urllib.urlencode(cleaned_values)
-
-        request = urllib2.Request(self._get_endpoint(), data)
-        try:
-            result = urllib2.urlopen(request).read()
-        except urllib2.HTTPError, exc:
-            error_code = exc.getcode()
-
-            if error_code >= 600 and error_code <= 699:
-                # HTTP error codes 600-699 are input errors.
-                raise V3ClientInputException(exc.msg, error_code=error_code)
-            elif error_code >= 700 and error_code <= 799:
-                # HTTP error codes 700-799 are processing errors.
-                raise V3ClientProcessingException(exc.msg, error_code=error_code)
-            else:
-                raise
-
-        result_dict = urlparse.parse_qs(result)
+        result_dict = urlparse.parse_qs(response.text)
         for key, value in result_dict.items():
             # Strip away the lists from the value, since these should all just
             # be a one-member list. We'll join with commas just in case.
             result_dict[key] = ','.join(value)
+
+        # Looks through the parsed response dict for common error codes. Raises
+        # exceptions if any are found.
+        self._check_parsed_response_for_error_codes(result_dict)
 
         return result_dict
