@@ -16,9 +16,9 @@ class V1ClientException(Exception):
 
     def __str__(self):
         if self.error_code:
-            return "%s (Error Code: %s)" % (repr(self.message), self.error_code)
+            return "%s (Error Code: %s)" % (self.message, self.error_code)
         else:
-            return repr(self.message)
+            return self.message
 
 
 class V1ClientInputException(V1ClientException):

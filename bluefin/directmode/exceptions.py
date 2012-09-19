@@ -16,9 +16,9 @@ class V3ClientException(Exception):
 
     def __str__(self):
         if self.error_code:
-            return "%s (Error Code: %s)" % (repr(self.message), self.error_code)
+            return "%s (Error Code: %s)" % (self.message, self.error_code)
         else:
-            return repr(self.message)
+            return self.message
 
 
 class V3ClientInputException(V3ClientException):
