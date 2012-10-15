@@ -5,7 +5,7 @@ Client classes for Direct Mode services.
 import urlparse
 import requests
 
-from bluefin.directmode.exceptions import V3ClientInputException, V3ClientProcessingException, V3ClientException
+from bluefin.directmode.exceptions import V3ClientInputException, V3ClientProcessingException, V3ClientException, V3ClientDeclinedException
 
 class V3Client(object):
     """
@@ -84,10 +84,14 @@ class V3Client(object):
         status_code = result_dict.get('status_code')
         # These are the two status codes that indicate issues.
         if result_dict.get('status_code') in ['F', '0']:
+            reason_code = result_dict.get('reason_code2')
             # There are multiple error fields to check. auth_msg is almost always
             # the one to go by.
-            err_message = result_dict.get('auth_msg') or result_dict.get('reason_code2')
-            raise V3ClientProcessingException(err_message, error_code=status_code)
+            err_message = result_dict.get('auth_msg') or reason_code
+            # These errors don't tend to use HTTP status codes, so check the
+            # reason_code2 field.
+            exc_code = status_code or reason_code
+            raise V3ClientDeclinedException(err_message, error_code=exc_code)
 
     def send_request(self, values):
         """

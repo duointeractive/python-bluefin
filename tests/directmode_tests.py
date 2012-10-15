@@ -1,6 +1,6 @@
 import unittest
 from bluefin.directmode.clients import V3Client
-from bluefin.directmode.exceptions import V3ClientInputException, V3ClientProcessingException
+from bluefin.directmode.exceptions import V3ClientInputException, V3ClientProcessingException, V3ClientDeclinedException
 from tests.api_details import API_DETAILS, TEST_CARD, INVALID_CARD_NUM
 
 class SaleTests(unittest.TestCase):
@@ -54,7 +54,9 @@ class SaleTests(unittest.TestCase):
             # http://www.iso.org/iso/en/prods-services/iso3166ma/index.html
             'bill_country': 'US',
         }
-        self.assertRaises(V3ClientProcessingException, self.api.send_request, api_values)
+        self.assertRaises(V3ClientDeclinedException,
+            self.api.send_request,
+                api_values)
 
 
 class AuthorizeTests(unittest.TestCase):

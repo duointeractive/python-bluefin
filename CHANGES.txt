@@ -1,6 +1,20 @@
 Changelog
 =========
 
+1.3
+---
+
+* Added a new V3ClientDeclinedException exception for directmode. This is
+  raised when Bluefin sets an error code on an alternate 'status_code'
+  attribute in the response.
+* The 'message' attribute on the V3ClientDeclinedException features a
+  "human-friendly" message. Bluefin spits out some pretty cryptic junk for
+  the 'status_code' induced errors.
+* To get the un-modified error message that came back from the Bluefin API
+  (for any of our V3Client exceptions), you can now use the `raw_message`
+  attribute on the exception. The `message` attribute is now replaced with a
+  more friendly version for certain crappy error messages from Bluefin.
+
 1.2
 ---
 
