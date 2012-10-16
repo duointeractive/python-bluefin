@@ -1,4 +1,4 @@
-python-bluefin 1.2
+python-bluefin 1.3
 ==================
 
 python-bluefin is a Python API client for the Bluefin_ Payment System API.
