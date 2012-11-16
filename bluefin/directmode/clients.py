@@ -14,7 +14,7 @@ class V3Client(object):
     """
     def __init__(self, host='https://secure.bluefingateway.com:1402',
                  path='/gw/sas/direct3.1', http_timeout=15,
-                 account_id=None, dynip_sec_code=None):
+                 account_id=None, dynip_sec_code=None, max_retries=3):
         """
         Instantiates our API interface with sensible defaults.
 
@@ -29,13 +29,18 @@ class V3Client(object):
         :keyword str dynip_sec_code: A dynamic IP security code. Providing this
             value here means you don't have to pass it with each value dict
             to :py:meth:`send_request`.
+        :keyword int max_retries: Maximum number of retries in the event we
+            run into a retryable error.
         """
+
         # Default to the HTTPS endpoint.
         self.host = host
         # Default to the Transaction interface.
         self.path = path
-        # Note that this is applied gobally, so be careful.
+        # Note that this is applied globally, so be careful.
         self.http_timeout = http_timeout
+        # Maximum number of retries in the event we run into a retryable error.
+        self.max_retries = max_retries
 
         self.default_values = {}
 
@@ -115,14 +120,39 @@ class V3Client(object):
         # The transaction values can override the defaults.
         all_values.update(values)
 
-        response = requests.post(
-            self._get_endpoint(),
-            data=all_values,
-            timeout=self.http_timeout
-        )
-        # Looks at the HTTP status code and raises an exception if any of the
-        # known number ranges for errors are returned.
-        self._check_for_error_http_status_code(response)
+        retries = 0
+        response = None
+        # I hate to retry within an infinite loop, but it avoids recursion,
+        # and it works.
+        while True:
+            response = requests.post(
+                self._get_endpoint(),
+                data=all_values,
+                timeout=self.http_timeout
+            )
+
+            # Looks at the HTTP status code and raises an exception if any of the
+            # known number ranges for errors are returned.
+            try:
+                self._check_for_error_http_status_code(response)
+            except V3ClientException, exc:
+                if retries >= self.max_retries:
+                    # We've exceeded the max number of retries. We don't need
+                    # to see what error this is, because we can't retry any more.
+                    raise
+
+                if exc.error_code in [408, '408']:
+                    # 408's are often network related, and are safe to retry.
+                    # Increment the retry counter and jump back to the top
+                    # of the loop.
+                    retries += 1
+                    continue
+                else:
+                    # This is not a retryable error. Re-raise that sucker.
+                    raise
+
+            # Nothing bad happened. Break the loop.
+            break
 
         result_dict = urlparse.parse_qs(response.text)
         for key, value in result_dict.items():

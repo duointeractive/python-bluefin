@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.4
+---
+
+* Added an auto-retry mechanism to directmode. This is currently only used
+  to retry when we encounter HTTP 408's from Bluefin.
+* Added a max_retries keyword to V3Client's constructor. Defaults to 3 retries.
+
 1.3
 ---
 
